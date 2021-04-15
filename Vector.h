@@ -20,10 +20,12 @@ public:
     void add(const T&, size_t);
     void copy(const Vector<T>&);
     void clear();
-    void resize(size_t);
+    void resize();
 
     T getItem(size_t) const;
     void setItem(size_t, const T&);
+
+    bool operator==(const Vector<T>&);
 
     T& operator[](size_t);
     const T operator[](size_t) const;

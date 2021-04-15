@@ -57,6 +57,7 @@ void Vector<T>::add(const T& elem, size_t pos) {
 	}
 	else {
 		this->buffer[pos] = elem;
+		this->size++;
 	}
 }
 
@@ -75,7 +76,7 @@ void Vector<T>::copy(const Vector<T>& entity)
 template<typename T>
 void Vector<T>::clear()
 {
-	if (!buffer) { 
+	if (!buffer) {
 		return;
 	}
 
@@ -86,11 +87,13 @@ void Vector<T>::clear()
 }
 
 template<typename T>
-void Vector<T>::resize(size_t new_capacity)
+void Vector<T>::resize()
 {
+	size_t new_capacity = 8;
+
 	if (!buffer)
 	{
-		this->buffer = new T[new_capacity+1];
+		this->buffer = new T[new_capacity];
 		for (size_t i = 0; i < new_capacity; i++)
 		{
 			this->buffer[i] = 0;
@@ -100,13 +103,13 @@ void Vector<T>::resize(size_t new_capacity)
 		return;
 	}
 
-	if (new_capacity < capacity)
+	/*if (new_capacity < capacity)
 	{
-		std::cout<<"Invalid index input!" << std::endl;
+		std::cout << "Invalid index input!" << std::endl;
 		return;
-	}
+	}*/
 
-	T* temp = new T[new_capacity + 1];
+	T* temp = new T[new_capacity*2+1];
 	for (size_t i = 0; i < capacity; i++)
 	{
 		temp[i] = this->buffer[i];
@@ -120,7 +123,7 @@ void Vector<T>::resize(size_t new_capacity)
 	delete[] buffer;
 	buffer = temp;
 
-	this->capacity = new_capacity;
+	this->capacity = new_capacity * 2;
 }
 
 template <typename T>
@@ -130,7 +133,7 @@ T Vector<T>::getItem(size_t i) const
 	{
 		return buffer[i];
 	}
-	 
+
 	std::cout << "Invalid index!";
 	return 0;
 }
@@ -138,12 +141,37 @@ T Vector<T>::getItem(size_t i) const
 template <typename T>
 void Vector<T>::setItem(size_t i, const T& x)
 {
+	if (i == 0)
+	{
+		add(x);
+		return;
+	}
+
 	if (i < size)
 	{
 		buffer[i] = x;
+		//size++;
 		return;
 	}
 	std::cout << "Invalid index!";
+}
+
+template<typename T>
+bool Vector<T>::operator==(const Vector<T>& entity) {
+	if (size != entity.size)
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < size; i++)
+	{
+		if (buffer[i] != entity.buffer[i])
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 
@@ -168,11 +196,11 @@ bool Vector<T>::operator||(const Vector<T>& other) {
 	}
 
 	T coeff = this->buffer[0] / other.buffer[0];
-	const double eps = 0.000001;
+	const double eps = 0.00000001;
 
 	for (int i = 1; i < this->size; ++i) {
 		double current = this->buffer[i] / other.buffer[i];
-		if (abs(coeff - current) > eps) {
+		if (abs(coeff - current) > 0) {
 			return false;
 		}
 	}
@@ -181,20 +209,17 @@ bool Vector<T>::operator||(const Vector<T>& other) {
 
 template<typename T>
 Vector<T>& Vector<T>::operator+=(const Vector<T>& other) {
-	if (this->size < other.size) {
-		this->resize(other.size);
-	}
-
+	
 	for (int i = 0; i < other.size; ++i) {
 		this->buffer[i] += other.buffer[i];
 	}
 
 	return *this;
-	
+
 }
 
 template<typename T>
-Vector<T> Vector<T>::operator+(const Vector<T>& other) const  {
+Vector<T> Vector<T>::operator+(const Vector<T>& other) const {
 	Vector<T> vector(*this);
 	vector += other;
 	return vector;
@@ -202,31 +227,11 @@ Vector<T> Vector<T>::operator+(const Vector<T>& other) const  {
 
 template<typename T>
 Vector<T>& Vector<T>::operator-=(const Vector<T>& other) {
-	Vector<T> vector = Vector<T>();
-
-	size_t max_capacity = fmax(capacity, other.capacity);
-	size_t max_size = fmax(size, other.size);
-
-	vector.buffer = new T[max_capacity];
-
-	for (size_t i = 0; i < max_size; i++)
-	{
-		if (size > other.size && i > other.size)
-		{
-			vector[i] = buffer[i];
-		}
-		else if (size < other.size && i > size)
-		{
-			vector[i] = other.buffer[i];
-		}
-		else {
-			vector.buffer[i] = buffer[i] - other.buffer[i];
-		}
+	
+	for (int i = 0; i < other.size; ++i) {
+		this->buffer[i] -= other.buffer[i];
 	}
-	vector.size = max_size;
-	vector.capacity = max_capacity;
-
-	return vector;
+	return *this;
 
 }
 
@@ -276,7 +281,7 @@ Vector<T> Vector<T>::operator/(const T scalar) const {
 }
 
 template<typename T>
-T Vector<T>::operator%(const Vector<T>& other)const { 
+T Vector<T>::operator%(const Vector<T>& other)const {
 	if (size != other.size)
 	{
 		std::cout << "Invalid operation!";
@@ -319,13 +324,13 @@ const T Vector<T>::operator[](size_t i) const
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const Vector<T>& v)
 {
-	
+
 	out << v.capacity << std::endl;
 	out << v.size << std::endl;
 	out << "(";
 	for (size_t i = 0; i < v.size; ++i)
 	{
-		out << v.buffer[i]<< " ";
+		out << v.buffer[i] << " ";
 	}
 	out << ")";
 	return out;
@@ -334,7 +339,7 @@ std::ostream& operator<<(std::ostream& out, const Vector<T>& v)
 
 template<typename T>
 void print(const Vector<T>& v) {
-		std::cout << v;
-		std::cout << std::endl;
+	std::cout << v;
+	std::cout << std::endl;
 
 }
